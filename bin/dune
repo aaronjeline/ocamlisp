@@ -1,0 +1,3 @@
+(executable
+	(name cmp)
+	(libraries lib str llvm llvm.analysis))
