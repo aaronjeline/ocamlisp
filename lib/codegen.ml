@@ -9,17 +9,19 @@ let the_module = create_module context "OCAMLISP Compiler"
 let builder = builder context
 let named_values:(string, llvalue) Hashtbl.t = Hashtbl.create 10
 let double_type = double_type context
+let int_type = i32_type context
 
 let builtins = ["+";"-";"*";"<"]
 
 let rec codegen_expr expr =
   match expr with
-  | Int i -> const_float double_type (float_of_int i)
+  | Int i -> const_int int_type i
   | Symbol s ->
     (match Hashtbl.find_opt named_values s with
     | Some r -> r
     | None -> raise @@ Error "Unknown variable")
   | Bool _ -> raise @@ Error "Unimplemented"
+      (* SPECIAL FORMS BEGIN *)
   | List (Symbol op::rst) when List.mem op builtins ->
     begin
       match rst with
@@ -28,13 +30,14 @@ let rec codegen_expr expr =
         let rhs_val = codegen_expr rhs in
         begin
           match op with
-          | "+" -> build_fadd lhs_val rhs_val "addtmp" builder
-          | "-" -> build_fsub lhs_val rhs_val "addtmp" builder
-          | "*" -> build_fmul lhs_val rhs_val "addtmp" builder
+          | "+" -> build_add lhs_val rhs_val "addtmp" builder
+          | "-" -> build_sub lhs_val rhs_val "addtmp" builder
+          | "*" -> build_mul lhs_val rhs_val "addtmp" builder
           | _ -> failwith "Not builtin!"
         end
       | _ -> failwith "Bad operation"
     end
+    (* SPECIAL FORMS https://github.com/syl20bnr/spacemacs/pull/11985END*)
   | List (Symbol s::args) -> (* Function call *)
     let callee =
       match lookup_function s the_module with
@@ -52,8 +55,8 @@ let rec codegen_expr expr =
 let codegen_proto p = match p with
   | Proto (name, args) ->
     let args = Array.of_list args in
-    let doubles = Array.make (Array.length args) double_type in
-    let ft = function_type double_type doubles in
+    let ints = Array.make (Array.length args) int_type in
+    let ft = function_type int_type ints in
     let f =
       match lookup_function name the_module with
       | None -> declare_function name ft the_module
