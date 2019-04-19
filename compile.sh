@@ -1,5 +1,6 @@
 #!/bin/bash
-
+# Usage: ./compile {source} {output}
+ 
 echo "Compiling $1 to $2"
 
 dune exec ./bin/cmp.exe < $1 2> $1.bc

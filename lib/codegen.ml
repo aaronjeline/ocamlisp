@@ -33,11 +33,45 @@ let rec codegen_expr expr =
           | "+" -> build_add lhs_val rhs_val "addtmp" builder
           | "-" -> build_sub lhs_val rhs_val "addtmp" builder
           | "*" -> build_mul lhs_val rhs_val "addtmp" builder
+          | "<" ->
+            let i = build_icmp Icmp.Slt lhs_val rhs_val "cmptmp" builder in
+            let d = build_uitofp i double_type "booltmp" builder in
+            build_fptosi d int_type "itmp" builder
           | _ -> failwith "Not builtin!"
         end
       | _ -> failwith "Bad operation"
     end
-    (* SPECIAL FORMS https://github.com/syl20bnr/spacemacs/pull/11985END*)
+  | List (Symbol "if"::cond::then'::else'::[]) ->
+    let cond = codegen_expr cond in
+    let zero = const_int int_type 0 in
+    let cond_val = build_icmp Icmp.Ne cond zero "ifcond" builder in
+    let start_bb = insertion_block builder in (* ptr to first block *)
+    let the_function = block_parent start_bb in
+    (* create /then/ block*)
+    let then_bb = append_block context "then" the_function in
+    position_at_end then_bb builder;
+    let then_val = codegen_expr then' in
+    let then_bb' = insertion_block builder in
+    (* create /else/ block *)
+    let else_bb = append_block context "else" the_function in
+    position_at_end else_bb builder;
+    let else_val = codegen_expr else' in
+    let else_bb'  = insertion_block builder in
+    (* create /merge/ block *)
+    let merge_bb = append_block context "ifcont" the_function in
+    position_at_end merge_bb builder;
+    let incoming = [(then_val, then_bb'); (else_val, else_bb')] in
+    let phi = build_phi incoming "iftmp" builder in
+    (*  add /cond/ branch*)
+    position_at_end start_bb builder;
+    ignore (build_cond_br cond_val then_bb else_bb builder);
+    position_at_end then_bb' builder; ignore (build_br merge_bb builder);
+    position_at_end else_bb' builder; ignore (build_br merge_bb builder);
+    position_at_end merge_bb builder;
+    phi
+
+  | List (Symbol "if"::_) -> raise @@ Error "Bad if form"
+    (* SPECIAL FORMS *)
   | List (Symbol s::args) -> (* Function call *)
     let callee =
       match lookup_function s the_module with

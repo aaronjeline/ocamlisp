@@ -31,7 +31,7 @@ let print_toklist toks =
 
 
 let reg_whitespace = regexp "[ \n\t]+"
-let reg_symbol = regexp "[a-zA-Z\\+\\?!@#$%\\^/&\\*=][a-zA-Z0-9+\\?!@/#$%\\^&\\*=]*"
+let reg_symbol = regexp "[a-zA-Z<\\+\\?!@#$%\\^/&\\*=][a-zA-Z0-9+\\?!@/#$%\\^&\\*=]*"
 let reg_string = regexp "\".*\""
 let reg_num = regexp "-?[0-9]*"
 let reg_bool = regexp "true|false"
