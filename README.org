@@ -1,2 +1,12 @@
 #+TITLE: OCamlisp Readme
 
+** Project Setup
+
+1. Create a new ~opam~ switch for this project ~opam switch create ocaml-system~
+2. Requires ~llvm-8~: https://apt.llvm.org/
+3. Install all the packages listed in ~packages.txt~
+4. Run ~dune build bin/cmp.exe~ to build the project
+
+** Using the compiler
+
+Usage: ~./compile.sh <input.lsp> <output>~
