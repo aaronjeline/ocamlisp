@@ -7,6 +7,12 @@ open Llvm
 
 type mode = Lex | Parse | Compile
 
+let print_all lst f =
+  List.iter
+    (fun e -> printf " %s" @@ f e)
+    lst;
+  printf "\n"
+
 let () =
   let m = Compile in
   let d = ref true in
@@ -15,10 +21,8 @@ let () =
       let s = read_line() in
       let s' = sprintf "(%s)" s in
       match m with
-      | Lex -> List.iter
-                 (fun t -> printf " %s" @@ string_of_tok t)
-                 (tokenize s'); printf "\n"
-      | Parse -> failwith "Unimplemented"
+      | Lex -> print_all (tokenize s') string_of_tok
+      | Parse -> printf "%s\n" @@ string_of_exp (parse (tokenize s'))
       | Compile ->
         let es = match parse (tokenize s') with
           | List es -> es

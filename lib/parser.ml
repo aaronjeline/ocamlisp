@@ -8,6 +8,15 @@ type exp =
   | Int of int
   | Bool of bool
 
+let rec string_of_exp e = match e with
+  | List e -> "(" ^ (fold_left
+               (fun acc nxt -> (string_of_exp nxt) ^ " " ^ acc)
+               ")"
+               (rev e))
+  | Symbol s -> s
+  | String s -> s
+  | Int i -> string_of_int i
+  | Bool b -> string_of_bool b
 
 type parse_result = exp * (token list)
 
